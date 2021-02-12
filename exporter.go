@@ -4,10 +4,16 @@ import (
 	"context"
 	"sync"
 	"time"
+  "os"
 
 	"github.com/prometheus/client_golang/prometheus"
 	log "github.com/sirupsen/logrus"
+	errlog "github.com/sirupsen/logrus"
 )
+
+func init() {
+  log.SetOutput(os.Stdout)
+}
 
 var (
 	exportersMu       sync.RWMutex
@@ -100,13 +106,13 @@ func (e *exporter) Collect(ch chan<- prometheus.Metric) {
 	allUp := true
 
 	if err := e.collectWithDuration(e.overviewExporter, "overview", ch); err != nil {
-		log.WithError(err).Warn("retrieving overview failed")
+		errlog.WithError(err).Warn("retrieving overview failed")
 		allUp = false
 	}
 
 	for name, ex := range e.exporter {
 		if err := e.collectWithDuration(ex, name, ch); err != nil {
-			log.WithError(err).Warn("retrieving " + name + " failed")
+			errlog.WithError(err).Warn("retrieving " + name + " failed")
 			allUp = false
 		}
 	}
